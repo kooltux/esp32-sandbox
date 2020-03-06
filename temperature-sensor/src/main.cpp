@@ -4,14 +4,12 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <ESPmDNS.h>
+#include <Update.h>
 
 // For a connection via I2C using the Arduino Wire include:
 #include <SSD1306Wire.h>
 
-// WIFI connection
-const char* host = "esp32";
-const char* ssid = "mytestlab";
-const char* password = "123456789";
+#include "eeprom_config.h"
 
 // Initialize the OLED display using Arduino Wire:
 // SDA: 21
@@ -32,6 +30,8 @@ const long tempInterval = 5000;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensor(&oneWire);
 
+EEPROM_Config config;
+
 // display message buffer
 char message[33];
 
@@ -50,19 +50,26 @@ void setup() {
   const char * waiter="-\\|/";
 
   Serial.begin(115200);
-  pinMode(ledPin, OUTPUT);
 
-  // Start the DS18B20 sensor
-  sensor.begin();
-  sensor.setResolution(12);
+  pinMode(ledPin, OUTPUT);
 
   // Initialising the UI will init the display too.
   display.init();
   display.flipScreenVertically();
 
+  // retrive config from eeprom
+  displayMessage("Configure...");
+
+  // config.set_ssid("xxxxxx");
+  // config.set_password("xxxxxx");
+  // config.set_hostname("esp32");
+  // config.save();
+
+  config.load();
+
   // Connect to WiFi network
-  WiFi.begin(ssid, password);
-  Serial.println("Connecting to WLAN");
+  WiFi.begin(config.ssid(), config.password());
+  Serial.printf("Connecting to %s",config.ssid());
 
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
@@ -73,13 +80,13 @@ void setup() {
   }
   Serial.println("");
   Serial.print("Connected to ");
-  Serial.println(ssid);
+  Serial.println(config.ssid());
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
   displayMessage("WLAN ok");
 
   /*use mdns for host name resolution*/
-  if (!MDNS.begin(host)) { //http://esp32.local
+  if (!MDNS.begin(config.hostname())) { //http://esp32.local
     Serial.println("Error setting up MDNS responder!");
 	displayMessage("mDNS error");
     while (1) {
@@ -88,6 +95,10 @@ void setup() {
   }
   Serial.println("mDNS responder started");
   displayMessage("mDNS ok");
+
+  // Start the DS18B20 sensor
+  sensor.begin();
+  sensor.setResolution(12);
 }
 
 unsigned long previousMillis = 0;  // will store last time LED was updated
@@ -111,7 +122,6 @@ void loop() {
 		temperatureIsValid = (temperature != -127.0);
 
 		Serial.printf("Temperature: %f ºC\n", temperature);
-		Serial.printf("I2C Display: %x %d %d\n",DISPLAY_ADDR,SDA,SCL);
 
 		// update display
 		if (temperatureIsValid) {
