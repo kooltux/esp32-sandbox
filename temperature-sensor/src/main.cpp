@@ -10,6 +10,8 @@
 #include <SSD1306Wire.h>
 
 #include "eeprom_config.h"
+#include "web.h"
+#include "i2c.h"
 
 // Initialize the OLED display using Arduino Wire:
 // SDA: 21
@@ -35,39 +37,6 @@ EEPROM_Config config;
 // display message buffer
 char message[33];
 
-void scanI2C() {
-	Wire.begin(SDA,SCL);
-	byte error, address;
-	int nDevices;
-	Serial.println("Scanning...");
-	nDevices = 0;
-	for(address = 1; address < 127; address++ ) {
-		Wire.beginTransmission(address);
-		error = Wire.endTransmission();
-		if (error == 0) {
-			Serial.print("I2C device found at address 0x");
-			if (address<16) {
-				Serial.print("0");
-			}
-			Serial.println(address,HEX);
-			nDevices++;
-		}
-		else if (error==4) {
-			Serial.print("Unknow error at address 0x");
-			if (address<16) {
-				Serial.print("0");
-			}
-			Serial.println(address,HEX);
-		}    
-	}
-	if (nDevices == 0) {
-		Serial.println("No I2C devices found\n");
-	}
-	else {
-		Serial.println("done\n");
-	}
-}
-
 void displayMessage(const char *msg, SSD1306Wire* d=NULL) {
 	if (!d) d=&display;
 
@@ -88,7 +57,7 @@ void setup() {
 
 	pinMode(ledPin, OUTPUT);
 
-	scanI2C();
+	ScanI2C();
 
 	// Initialising the UI will init the display too.
 	display.init();
