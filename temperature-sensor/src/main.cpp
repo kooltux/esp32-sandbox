@@ -15,7 +15,7 @@
 // SDA: 21
 // SCL: 22
 #define DISPLAY_ADDR 0x3c
-SSD1306Wire display(DISPLAY_ADDR, SDA, SCL, GEOMETRY_128_32);   // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h
+SSD1306Wire display(DISPLAY_ADDR, SDA, SCL, GEOMETRY_128_32); // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h
 
 // ESP32 Pin to which onboard LED is connected
 #define ledPin 23 // ESP32 GPIO 23
@@ -35,55 +35,66 @@ EEPROM_Config config;
 // display message buffer
 char message[33];
 
-void scanI2C() {
-	Wire.begin(SDA,SCL);
+void scanI2C()
+{
+	Wire.begin(SDA, SCL);
 	byte error, address;
 	int nDevices;
 	Serial.println("Scanning...");
 	nDevices = 0;
-	for(address = 1; address < 127; address++ ) {
+	for (address = 1; address < 127; address++)
+	{
 		Wire.beginTransmission(address);
 		error = Wire.endTransmission();
-		if (error == 0) {
+		if (error == 0)
+		{
 			Serial.print("I2C device found at address 0x");
-			if (address<16) {
+			if (address < 16)
+			{
 				Serial.print("0");
 			}
-			Serial.println(address,HEX);
+			Serial.println(address, HEX);
 			nDevices++;
 		}
-		else if (error==4) {
+		else if (error == 4)
+		{
 			Serial.print("Unknow error at address 0x");
-			if (address<16) {
+			if (address < 16)
+			{
 				Serial.print("0");
 			}
-			Serial.println(address,HEX);
-		}    
+			Serial.println(address, HEX);
+		}
 	}
-	if (nDevices == 0) {
+	if (nDevices == 0)
+	{
 		Serial.println("No I2C devices found\n");
 	}
-	else {
+	else
+	{
 		Serial.println("done\n");
 	}
 }
 
-void displayMessage(const char *msg, SSD1306Wire* d=NULL) {
-	if (!d) d=&display;
+void displayMessage(const char *msg, SSD1306Wire *d = NULL)
+{
+	if (!d)
+		d = &display;
 
 	d->clear();
-	if (strlen(msg) <=10)
-    	d->setFont(ArialMT_Plain_24);
-    else
+	if (strlen(msg) <= 10)
+		d->setFont(ArialMT_Plain_24);
+	else
 		d->setFont(ArialMT_Plain_16);
-	d->drawString(0,0,msg);
+	d->drawString(0, 0, msg);
 	d->display();
 }
 
-void setup() {
-	int n=0;
-	const char * waiter="-\\|/";
-	
+void setup()
+{
+	int n = 0;
+	const char *waiter = "-\\|/";
+
 	Serial.begin(115200);
 
 	pinMode(ledPin, OUTPUT);
@@ -97,21 +108,22 @@ void setup() {
 	// retrive config from eeprom
 	displayMessage("Configure...");
 
-	// config.set_ssid("xxxxxx");
-	// config.set_password("xxxxxx");
-	// config.set_hostname("esp32");
-	// config.save();
+	//config.set_ssid("xxxxxxxx");
+	//config.set_password("xxxxxxxx");
+	//config.set_hostname("esp32");
+	//config.save();
 
 	config.load();
 
 	// Connect to WiFi network
 	WiFi.begin(config.ssid(), config.password());
-	Serial.printf("Connecting to %s",config.ssid());
+	Serial.printf("Connecting to %s", config.ssid());
 
 	// Wait for connection
-	while (WiFi.status() != WL_CONNECTED) {
+	while (WiFi.status() != WL_CONNECTED)
+	{
 		Serial.print(".");
-		sprintf(message,"WLAN connect  %c",waiter[(n++)%4]);
+		sprintf(message, "WLAN connect  %c", waiter[(n++) % 4]);
 		displayMessage(message);
 		delay(50);
 	}
@@ -123,11 +135,13 @@ void setup() {
 	displayMessage("WLAN ok");
 
 	/*use mdns for host name resolution*/
-	if (!MDNS.begin(config.hostname())) { //http://esp32.local
+	if (!MDNS.begin(config.hostname()))
+	{ //http://esp32.local
 		Serial.println("Error setting up MDNS responder!");
 		displayMessage("mDNS error");
-		while (1) {
-		delay(1000);
+		while (1)
+		{
+			delay(1000);
 		}
 	}
 	Serial.println("mDNS responder started");
@@ -138,15 +152,17 @@ void setup() {
 	sensor.setResolution(12);
 }
 
-unsigned long previousMillis = 0;  // will store last time LED was updated
+unsigned long previousMillis = 0; // will store last time LED was updated
 float temperature = -127.0;
 float previousTemp = temperature;
 bool temperatureIsValid = false;
 
-void loop() {
+void loop()
+{
 	//loop to blink without delay
 	unsigned long currentMillis = millis();
-	if (currentMillis - previousMillis >= tempInterval) {
+	if (currentMillis - previousMillis >= tempInterval)
+	{
 		// save the last time you blinked the LED
 		previousMillis = currentMillis;
 
@@ -161,13 +177,14 @@ void loop() {
 		Serial.printf("Temperature: %f ºC\n", temperature);
 
 		// update display
-		if (temperatureIsValid) {
-			sprintf(message,"%.2f °C %c",temperature,
-				(previousTemp<temperature)?'^':((previousTemp>temperature)?'v':'=')
-			);
+		if (temperatureIsValid)
+		{
+			sprintf(message, "%.2f °C %c", temperature,
+					(previousTemp < temperature) ? '^' : ((previousTemp > temperature) ? 'v' : '='));
 			displayMessage(message);
 		}
-		else {
+		else
+		{
 			displayMessage("- undef -");
 		}
 
@@ -176,4 +193,3 @@ void loop() {
 
 	delay(10);
 }
-
