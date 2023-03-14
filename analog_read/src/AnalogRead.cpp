@@ -1,15 +1,18 @@
 #include <Arduino.h>
 #include <driver/adc.h>
 
-#if defined(BUILD_BOARD_esp32dev)
+#if defined(BUILD_BOARD_esp32d1)
 #define ADC_PIN0 23
-#define LED_PIN0 15
+#define LED_PIN0 2
 #elif defined(BUILD_BOARD_esp32s2)
 #define ADC_PIN0 3
-#define LED_PIN0 15
+#define LED_PIN0 15 // 15
 #elif defined(BUILD_BOARD_esp32c3)
 #define ADC_PIN0 0
-#define LED_PIN0 7
+#define LED_PIN0 7 // 7
+#elif defined(BUILD_BOARD_esp32c3_luatos)
+#define ADC_PIN0 0
+#define LED_PIN0 7 // 7
 #else
 #error "Unknown build environment"
 #endif
