@@ -2,7 +2,7 @@
 #include <driver/adc.h>
 
 #if defined(BUILD_BOARD_esp32d1)
-#define D_PIN0 0
+#define D_PIN0 36
 #define LED_PIN0 2
 #elif defined(BUILD_BOARD_esp32s2)
 #define D_PIN0 0
